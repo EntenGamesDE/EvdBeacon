@@ -55,6 +55,8 @@ final class BeaconManager{
 	/** @var array<int, array<int, Effect>> */
 	private array $effect_validators = [];
 
+	private ?int $forcedRange = null;
+
 	/**
 	 * @param Block[] $pyramid_blocks
 	 * @param Item[] $fuel_items
@@ -87,6 +89,14 @@ final class BeaconManager{
 	public function isFuelItem(Item $item) : bool{
 		return isset($this->fuel_items[$item->getId()]);
 	}
+
+    public function getForcedRange(): ?int{
+        return $this->forcedRange;
+    }
+
+    public function setForcedRange(?int $forcedRange): void{
+        $this->forcedRange = $forcedRange;
+    }
 
 	public function isEffectValid(Effect $effect, int $layers) : bool{
 		foreach($this->effect_validators as $required_layers => $effects){

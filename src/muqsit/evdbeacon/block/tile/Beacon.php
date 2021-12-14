@@ -185,7 +185,7 @@ class Beacon extends Spawnable implements InventoryHolder, Nameable{
 	}
 
 	public function getRange() : int{
-		return ($this->layers + 1) * 10;
+		return BeaconManager::getInstance()->getForcedRange() ?? ($this->layers + 1) * 10;
 	}
 
 	public function getEffectDuration() : int{
@@ -350,40 +350,47 @@ class Beacon extends Spawnable implements InventoryHolder, Nameable{
 		if(count($effects) > 0){
 			$range = $this->getRange();
 
-			$min_x = $this->position->x - $range;
-			$max_x = $this->position->x + $range;
+            $world = $this->position->getWorld();
+			if($range === PHP_INT_MAX) {
+			    $players = $world->getPlayers();
+            } else {
+                $min_x = $this->position->x - $range;
+                $max_x = $this->position->x + $range;
 
-			$min_y = $this->position->y - $range;
-			$max_y = $range + World::Y_MAX;
+                $min_y = $this->position->y - $range;
+                $max_y = $range + World::Y_MAX;
 
-			$min_z = $this->position->z - $range;
-			$max_z = $this->position->z + $range;
+                $min_z = $this->position->z - $range;
+                $max_z = $this->position->z + $range;
 
-			$min_chunkX = $min_x >> 4;
-			$max_chunkX = $max_x >> 4;
+                $min_chunkX = $min_x >> 4;
+                $max_chunkX = $max_x >> 4;
 
-			$min_chunkZ = $min_z >> 4;
-			$max_chunkZ = $max_z >> 4;
+                $min_chunkZ = $min_z >> 4;
+                $max_chunkZ = $max_z >> 4;
 
-			$world = $this->position->getWorld();
-			for($chunkX = $min_chunkX; $chunkX <= $max_chunkX; ++$chunkX){
-				for($chunkZ = $min_chunkZ; $chunkZ <= $max_chunkZ; ++$chunkZ){
-					foreach($world->getChunkEntities($chunkX, $chunkZ) as $entity){
-						if($entity instanceof Player){
-							$pos = $entity->getPosition();
-							if(
-								$pos->x >= $min_x && $pos->x <= $max_x &&
-								$pos->z >= $min_z && $pos->z <= $max_z &&
-								$pos->y >= $min_y && $pos->y <= $max_y
-							){
-								foreach($effects as $effect){
-									$entity->getEffects()->add(new EffectInstance($effect->getType(), $effect->getDuration(), $effect->getAmplifier(), $effect->isVisible(), $effect->isAmbient(), $effect->getColor()));
-								}
-							}
-						}
-					}
-				}
-			}
+                $players = [];
+                for($chunkX = $min_chunkX; $chunkX <= $max_chunkX; ++$chunkX){
+                    for($chunkZ = $min_chunkZ; $chunkZ <= $max_chunkZ; ++$chunkZ){
+                        foreach($world->getChunkEntities($chunkX, $chunkZ) as $entity){
+                            if($entity instanceof Player){
+                                $pos = $entity->getPosition();
+                                if(
+                                    $pos->x >= $min_x && $pos->x <= $max_x &&
+                                    $pos->z >= $min_z && $pos->z <= $max_z &&
+                                    $pos->y >= $min_y && $pos->y <= $max_y
+                                ) $players[] = $entity;
+                            }
+                        }
+                    }
+                }
+            }
+
+            foreach($players as $player) {
+                foreach($effects as $effect){
+                    $player->getEffects()->add(new EffectInstance($effect->getType(), $effect->getDuration(), $effect->getAmplifier(), $effect->isVisible(), $effect->isAmbient(), $effect->getColor()));
+                }
+            }
 
 			$world->scheduleDelayedBlockUpdate($this->position, 80);
 		}
