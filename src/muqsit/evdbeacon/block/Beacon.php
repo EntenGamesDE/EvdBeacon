@@ -13,6 +13,7 @@ use pocketmine\math\Facing;
 use pocketmine\math\Vector3;
 use pocketmine\player\Player;
 use pocketmine\world\BlockTransaction;
+use pocketmine\world\sound\NoteInstrument;
 
 class Beacon extends Transparent{
 
@@ -48,4 +49,8 @@ class Beacon extends Transparent{
 			BeaconTimings::$tick->stopTiming();
 		}
 	}
+
+    public function getNoteblockInstrument(): NoteInstrument{
+        return NoteInstrument::SNARE();
+    }
 }
